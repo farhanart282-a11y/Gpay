@@ -1,0 +1,5 @@
+{
+  "name": "G-Pay Clone",
+  "description": "A clean, modern payment application interface inspired by Google Pay, featuring transaction history, quick actions, and card management.",
+  "requestFramePermissions": []
+}
