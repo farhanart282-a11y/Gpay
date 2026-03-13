@@ -29,7 +29,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { QRCodeSVG } from 'qrcode.react';
-import InstallPrompt from './InstallPrompt';
 
 // Mock Data
 const TRANSACTIONS = [
@@ -70,25 +69,6 @@ export default function App() {
   const [pin, setPin] = useState('');
   const [selectedContact, setSelectedContact] = useState<any>(CONTACTS[0]);
   const [historyFilter, setHistoryFilter] = useState<'all' | 'paid' | 'received'>('all');
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
-
-  // PWA Install Prompt Handler
-  useEffect(() => {
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-
-    window.addEventListener('beforeinstallprompt', handler);
-
-    // Check if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsInstalled(true);
-    }
-
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
 
   // Sound Effect for successful payment
   useEffect(() => {
@@ -134,18 +114,6 @@ export default function App() {
     });
     setIsManualInput(false);
     setIsPaying(true);
-  };
-
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null);
-      setIsInstalled(true);
-    }
   };
 
   const filteredTransactions = TRANSACTIONS.filter(tx => {
@@ -243,7 +211,6 @@ export default function App() {
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-brand-surface pb-24 font-sans relative overflow-hidden">
-      <InstallPrompt />
       <AnimatePresence mode="wait">
         {currentTab === 'home' && (
           <motion.div
@@ -448,129 +415,6 @@ export default function App() {
                 ))}
               </div>
             </div>
-          </motion.div>
-        )}
-
-        {currentTab === 'more' && (
-          <motion.div
-            key="more"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="w-full min-h-screen bg-white"
-          >
-            <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md px-4 py-6 flex items-center justify-between border-b border-slate-100">
-              <h2 className="text-xl font-bold">More</h2>
-              <div className="w-10 h-10 rounded-full bg-brand-blue flex items-center justify-center text-white font-bold shadow-sm cursor-pointer">
-                JD
-              </div>
-            </header>
-
-            <main className="p-4 space-y-6">
-              {/* Install App Section */}
-              <section className="space-y-3">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-2">App</h3>
-                <div className="bg-white rounded-2xl card-shadow overflow-hidden">
-                  <button 
-                    onClick={handleInstallClick}
-                    disabled={isInstalled || !deferredPrompt}
-                    className="w-full p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="relative w-12 h-12 shrink-0">
-                      <div className="absolute inset-0 bg-blue-50 rounded-xl flex items-center justify-center">
-                        <Smartphone size={24} className="text-brand-blue" />
-                      </div>
-                      {!isInstalled && deferredPrompt && (
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-brand-blue rounded-full flex items-center justify-center">
-                          <Download size={12} className="text-white" strokeWidth={3} />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="font-bold text-sm">
-                        {isInstalled ? 'App Installed' : 'Install App'}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {isInstalled 
-                          ? 'App is installed on your device' 
-                          : deferredPrompt 
-                            ? 'Add to home screen for quick access'
-                            : 'Already installed or not available'
-                        }
-                      </p>
-                    </div>
-                    {!isInstalled && deferredPrompt && (
-                      <ChevronRight size={20} className="text-slate-400" />
-                    )}
-                    {isInstalled && (
-                      <CheckCircle2 size={20} className="text-green-500" />
-                    )}
-                  </button>
-                </div>
-              </section>
-
-              {/* Account Section */}
-              <section className="space-y-3">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-2">Account</h3>
-                <div className="bg-white rounded-2xl card-shadow overflow-hidden divide-y divide-slate-50">
-                  <button className="w-full p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors">
-                    <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
-                      <Users size={24} className="text-purple-600" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="font-bold text-sm">Profile Settings</p>
-                      <p className="text-xs text-slate-500">Manage your account</p>
-                    </div>
-                    <ChevronRight size={20} className="text-slate-400" />
-                  </button>
-                  
-                  <button className="w-full p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors">
-                    <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
-                      <Lock size={24} className="text-green-600" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="font-bold text-sm">Security</p>
-                      <p className="text-xs text-slate-500">PIN, biometrics & more</p>
-                    </div>
-                    <ChevronRight size={20} className="text-slate-400" />
-                  </button>
-
-                  <button className="w-full p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors">
-                    <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center">
-                      <CreditCard size={24} className="text-orange-600" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="font-bold text-sm">Payment Methods</p>
-                      <p className="text-xs text-slate-500">Cards & bank accounts</p>
-                    </div>
-                    <ChevronRight size={20} className="text-slate-400" />
-                  </button>
-                </div>
-              </section>
-
-              {/* Support Section */}
-              <section className="space-y-3">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-2">Support</h3>
-                <div className="bg-white rounded-2xl card-shadow overflow-hidden divide-y divide-slate-50">
-                  <button className="w-full p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors">
-                    <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
-                      <Receipt size={24} className="text-blue-600" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="font-bold text-sm">Help Center</p>
-                      <p className="text-xs text-slate-500">FAQs & support</p>
-                    </div>
-                    <ChevronRight size={20} className="text-slate-400" />
-                  </button>
-                </div>
-              </section>
-
-              {/* App Info */}
-              <div className="text-center py-8 space-y-2">
-                <p className="text-xs text-slate-400">Version 1.0.0</p>
-                <p className="text-xs text-slate-400">© 2026 Google Pay Clone</p>
-              </div>
-            </main>
           </motion.div>
         )}
       </AnimatePresence>
