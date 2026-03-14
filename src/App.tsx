@@ -69,6 +69,37 @@ export default function App() {
   const [pin, setPin] = useState('');
   const [selectedContact, setSelectedContact] = useState<any>(CONTACTS[0]);
   const [historyFilter, setHistoryFilter] = useState<'all' | 'paid' | 'received'>('all');
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+
+  // PWA Install Logic
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBanner(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', () => {
+      setShowInstallBanner(false);
+      setDeferredPrompt(null);
+    });
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setShowInstallBanner(false);
+    }
+    setDeferredPrompt(null);
+  };
 
   // Sound Effect for successful payment
   useEffect(() => {
@@ -236,6 +267,26 @@ export default function App() {
             </header>
 
             <main className="px-4 py-6 space-y-8">
+              {/* PWA Install Banner */}
+              {showInstallBanner && (
+                <motion.section 
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-indigo-600 rounded-3xl p-6 text-white flex items-center justify-between shadow-lg shadow-indigo-200"
+                >
+                  <div className="space-y-1">
+                    <h3 className="font-bold text-lg">Install GPay Clone</h3>
+                    <p className="text-indigo-100 text-xs">Access GPay faster from your home screen</p>
+                  </div>
+                  <button 
+                    onClick={handleInstallApp}
+                    className="bg-white text-indigo-600 px-4 py-2 rounded-xl font-bold text-sm active:scale-95 transition-transform"
+                  >
+                    Install
+                  </button>
+                </motion.section>
+              )}
+
               {/* Balance Card */}
               <section className="bg-white rounded-3xl p-6 card-shadow space-y-4">
                 <div className="flex justify-between items-start">
@@ -414,6 +465,89 @@ export default function App() {
                   </div>
                 ))}
               </div>
+            </div>
+          </motion.div>
+        )}
+
+        {currentTab === 'more' && (
+          <motion.div
+            key="more"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="w-full min-h-screen bg-brand-surface p-6 space-y-8"
+          >
+            <header className="flex items-center gap-4">
+              <button onClick={() => setCurrentTab('home')} className="p-1">
+                <ArrowLeft size={24} />
+              </button>
+              <h2 className="text-2xl font-bold">Settings & More</h2>
+            </header>
+
+            <div className="space-y-6">
+              <section className="bg-white rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider">App Settings</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-50 text-brand-blue rounded-xl">
+                        <Lock size={20} />
+                      </div>
+                      <span className="font-medium">App Lock</span>
+                    </div>
+                    <div className="w-12 h-6 bg-brand-blue rounded-full relative">
+                      <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-50 text-green-600 rounded-xl">
+                        <Zap size={20} />
+                      </div>
+                      <span className="font-medium">Notifications</span>
+                    </div>
+                    <div className="w-12 h-6 bg-slate-200 rounded-full relative">
+                      <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="bg-white rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider">PWA Features</h3>
+                <div className="space-y-4">
+                  <button 
+                    onClick={handleInstallApp}
+                    disabled={!deferredPrompt}
+                    className="w-full flex items-center justify-between group disabled:opacity-50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                        <Download size={20} />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-medium">Install App</p>
+                        <p className="text-xs text-slate-400">Add to your home screen</p>
+                      </div>
+                    </div>
+                    <ChevronRight size={20} className="text-slate-300 group-hover:text-slate-500 transition-colors" />
+                  </button>
+                </div>
+              </section>
+
+              <section className="bg-white rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider">About</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600">Version</span>
+                    <span className="font-medium">1.0.0</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600">Build</span>
+                    <span className="font-medium">2026.03.14</span>
+                  </div>
+                </div>
+              </section>
             </div>
           </motion.div>
         )}

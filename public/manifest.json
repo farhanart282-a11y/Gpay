@@ -1,0 +1,17 @@
+{
+  "name": "Google Pay Clone",
+  "short_name": "GPay",
+  "description": "A secure and fast payment app clone",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8F9FA",
+  "theme_color": "#1A73E8",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/6124/6124998.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
